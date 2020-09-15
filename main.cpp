@@ -22,29 +22,29 @@ const unsigned int SIZE_A = 64;
 const unsigned int SIZE_B = 32;
 
 
-template <typename T>
-void test_field_length(T a, T b) {
-    int length_a = std::to_string(a).length();
-    int length_b = std::to_string(b).length();
-    if (length_a < length_b)
-        std::swap(length_a, length_b);
-    assert(("\nTest Error: overflow for [a b] by [length]\n", length_a < LENGTH_A && length_b < LENGTH_B));
-}
+class TestCase {
+    public:
+        template <typename Ta, typename Tb>
+        void test_field_length(Ta a, Tb b) {
+            int length_a = std::to_string(a).length();
+            int length_b = std::to_string(b).length();
+            if (length_a < length_b)
+                std::swap(length_a, length_b);
+            assert(("\nTest Error: overflow for [a b] by [length]\n", length_a < LENGTH_A && length_b < LENGTH_B));
+            std::cout << "\nResult test at length - OK" << std::endl;
+        };
 
-template <typename T>
-void test_field_size(T a, T b) {
-    int size_a = a.size();
-    int size_b = b.size();
-    if (size_a < size_b)
-        std::swap(size_a, size_b);
-    assert(("\nTest Error: overflow for [a b] by [size]\n", size_a < SIZE_A && size_b < SIZE_B));
-}
+        template <typename Ta, typename Tb>
+        void test_field_size(Ta a, Tb b) {
+            int size_a = std::to_string(a).size();
+            int size_b = std::to_string(b).size();
+            if (size_a < size_b)
+                std::swap(size_a, size_b);
+            assert(("\nTest Error: overflow for [a b] by [size]\n", size_a < SIZE_A && size_b < SIZE_B));
+            std::cout << "\nResult test at size   - OK" << std::endl;
+        };
+};
 
-template <typename T>
-void test_field_length(T a) {
-    int length_a = a.length();
-    assert(("\nTest Error: overflow for [a] by [length]\n", length_a <= UNIT_N));
-}
 
 class BitString {
 public:
@@ -61,10 +61,10 @@ public:
 
     void recard_fields() {
         std::string str;
-        for (unsigned int i = 0; i < this->count; ++i)
+        for(unsigned int i = 0; i < this->count; ++i)
             str.push_back(this->unit[i]);
 
-        if (this->count > LENGTH_B - 1) {
+        if(this->count > LENGTH_B - 1) {
             const std::string str_large = '1' + str.substr(0, this->count - LENGTH_B + 1);
             this->bits.part_large = std::stoull(str_large, nullptr, 10);
             const std::string str_small = '1' + str.substr(this->count - LENGTH_B + 1, LENGTH_B - 1);
@@ -78,7 +78,7 @@ public:
     class Error {
         public:
             Error() {
-                std::cout << "Error: ";
+                std::cout << std::endl << "Error: ";
             };
             Error(const std::string &msg) : Error() {
                 std::cout << msg << std::endl;
@@ -89,20 +89,26 @@ public:
         return this->count;
     };
 
+    template <typename T>
+    void valid_input_length(T a) {
+        int length_a = a.length();
+        assert(("\nTest Error: overflow for [a] by [length]\n", length_a <= UNIT_N));
+    }
+
     void enter() {
         std::string str;
         std::cout << "Введите битовую строку: " << std::endl;
         std::cin >> str;
         this->count = str.size();
-        test_field_length(str);
+        this->valid_input_length(str);
 
-        for (unsigned int i = 0; i < this->count; i++)
+        for(unsigned int i = 0; i < this->count; i++)
             if (str[i] != '0' && str[i] != '1')
                 throw BitString::Error();
 
         this->unit = new unsigned char[this->count];
 
-        for (unsigned int i = 0; i < this->count; i++)
+        for(unsigned int i = 0; i < this->count; i++)
             this->unit[i] = str[i];
         this->recard_fields();
     };
@@ -111,6 +117,118 @@ public:
         for (unsigned int i = 0; i < this->count; i++)
             std::cout << this->unit[i];
     };
+
+    std::string notBit() {
+        std::string str;
+
+        for(unsigned int i = 0; i < this->count; i++) {
+            if(this->unit[i] == '0')
+                this->unit[i] = '1';
+            else
+                if(this->unit[i] == '1')
+                    this->unit[i] = '0';
+            str += this->unit[i];
+        }
+        return str;
+    };
+
+    std::string andBit(BitString b) {
+        std::string str;
+
+        for (unsigned int i = 0; i < this->count; i++) {
+            if(this->unit[i] == '0' && b.unit[i] == '1')
+                str += '0';
+            else
+                if(this->unit[i] == '1' && b.unit[i] == '0')
+                    str += '0';
+                else
+                    str += this->unit[i];
+        }
+        return str;
+    };
+
+    std::string orBit(BitString b) {
+         std::string str;
+
+         for(unsigned int i = 0; i < this->count; i++) {
+             if(this->unit[i]== '0' && b.unit[i] == '1')
+                 str += '1';
+             else
+                 if(this->unit[i] == '1' && b.unit[i] == '0')
+                     str += '1';
+                 else
+                     str += this->unit[i];
+         }
+         return str;
+    };
+
+    std::string xorBit(BitString b) {
+        std::string str;
+
+        for(unsigned int i = 0; i < this->count; i++) {
+            if(this->unit[i] == '0' && b.unit[i] == '1')
+                str += '1';
+            else
+                if(this->unit[i] == '1' && b.unit[i] == '0')
+                    str += '1';
+                else
+                    if(this->unit[i] == '0' && b.unit[i] == '0')
+                        str += '0';
+                    else
+                        if(this->unit[i] == '1' && b.unit[i] == '1')
+                            str += '0';
+        }
+        return str;
+    }
+
+    std::string rightShift(unsigned int n) {
+        std::string str;
+
+        for(unsigned int i = 0; i < this->count; i++)
+            str += this->unit[i];
+
+        str.erase(0, n);
+
+        for(unsigned int i = 0; i < n; i++)
+             str.append("0");
+        return str;
+    }
+
+    std::string leftShift(unsigned int n) {
+        std::string str;
+
+        for(unsigned int i = 0; i < this->count; i++)
+            str += this->unit[i];
+
+        str.erase(this->count-n, n);
+        str.insert(0, n, '0');
+
+        return str;
+    }
+
+    std::string rightCycleShift(unsigned int n) {
+        std::string str;
+
+        for(unsigned int i = n; i < this->count; i++)
+            str += this->unit[i];
+
+        for(unsigned int i = 0; i < n; i++)
+            str += this->unit[i];
+
+         return str;
+    }
+
+    std::string leftCycleShift(unsigned int n) {
+        std::string str;
+
+        for(unsigned int i = count - n; i < this->count; i++)
+            str += this->unit[i];
+
+        for(unsigned int i = 0; i < this->count - n; i++)
+            str += this->unit[i];
+
+        return str;
+    }
 
 private:
     unsigned char* unit;
@@ -121,7 +239,9 @@ private:
 int main() {
     setlocale(LC_ALL, "RUS");
 
+    TestCase tests;
     BitString a, b;
+
     try {
         a.enter();
         b.enter();
@@ -129,363 +249,129 @@ int main() {
         if (a.sizeBitString() != b.sizeBitString())
             throw BitString::Error();
 
-        //     int key = 0;
-        //     while(key != 11)
-        //     {
-        //          cout << "Нажмите (1) если хотите сложить битовые строки" <<endl
-        //               << "Нажмите (2) если хотите перемножить битовые строки" << endl
-        //               << "Нажмите (3) если хотите сложить по модулю битовые строки " << endl
-        //               << "Нажмите (4) если хотите выполнить побитовое отрицание  строк" <<endl
-        //               << "Нажмите (5) если хотите выполнить побитовый сдвиг вправо строк" << endl
-        //               << "Нажмите (6) если хотите выполнить побитовый сдвиг влево  строк " <<endl
-        //               << "Нажмите (7) если хотите выполнить циклический сдвиг строк вправо   " <<endl
-        //               << "Нажмите (8) если хотите выполнить циклический сдвиг строк влево  " <<endl
-        //               << "Нажмите (9) если хотите узнать состояние строк" <<endl
-        //               << "Нажмите (10) если хотите очистить экран" <<endl
-        //               << "Нажмите (11) если хотите выйти"<<endl;
-        //          cin >> key;
+        int key = 0;
+        bool flag_loop = true;
+        while(flag_loop) {
+            std::cout << std::endl
+                << " 1  - сложить битовые строки" << std::endl
+                << " 2  - перемножить битовые строки" << std::endl
+                << " 3  - сложить по модулю битовые строки " << std::endl
+                << " 4  - выполнить побитовое отрицание  строк" << std::endl
+                << " 5  - выполнить побитовый сдвиг вправо строк" << std::endl
+                << " 6  - выполнить побитовый сдвиг влево  строк " << std::endl
+                << " 7  - выполнить циклический сдвиг строк вправо   " << std::endl
+                << " 8  - выполнить циклический сдвиг строк влево  " << std::endl
+                << " 9  - узнать состояние строк" << std::endl
+                << " 10 - запустить тесты внутреннего представления" << std::endl
+                << " 11 - очистить экран" << std::endl
+                << " 12 - выйти"<<std::endl;
+            std::cin >> key;
 
-        //          switch(key)
-        //          {
-        //              case 1 :{ cout << endl << "Сумма равна :" << B.or(B1) <<endl << endl; break;}
-        //              case 2 :{ cout << endl << "Произведение равно :" << B.and(B1) <<endl << endl; break;}
-        //              case 3 :{ cout << endl << "Сумма по модулю равна : " <<  B.xor(B1) <<endl << endl; break;}
-        //              case 4 :{ cout << endl << "Побитовое отрицание первой строки равно " << B.not() << endl
-        //                                     << "Побитовое отрицание второй строки равно " << B1.not() << endl << endl; break;}
-        //              case 5  :{
-        //                         cout << " На сколько будем двигать строки?" <<endl;
-        //                         unsigned int n;
-        //                         cin >> n;
-        //                         if (n < 0)
-        //                             throw Bitstring::Error();
-        //                         cout << "Результаты побитового сдвига:" << endl
-        //                              << "   первая строка - " << B.rShift(n) << endl
-        //                              << "   вторая строка - " << B1.rShift(n) << endl << endl ;
-        //                         break;
-        //                        }
-        //              case 6:  {
-        //                         cout << " На сколько будем двигать строки?" <<endl;
-        //                         unsigned int n;
-        //                         cin >> n;
-        //                         if (n < 0)
-        //                             throw Bitstring::Error();
-        //                         cout << "Результаты побитового сдвига:" << endl
-        //                              << "   первая строка - " << B.lShift(n) << endl
-        //                              << "   вторая строка - " << B1.lShift(n) << endl << endl;
-        //                         break;
-        //                         }
-        //              case 7:   {
-        //                         cout << " На сколько будем двигать строки?" <<endl;
-        //                         unsigned int n;
-        //                         cin >> n;
-        //                         if (n < 0)
-        //                             throw Bitstring::Error();
-        //                         cout << "Результаты побитового сдвига:" << endl
-        //                             << "    первая строка - " << B.rightCycleShift(n) << endl
-        //                             << "    вторая строка - " << B1.rightCycleShift(n) << endl << endl;
-        //                         break;
-        //                         }
-        //              case 8:   {
-        //                         cout << " На сколько будем двигать строки?" <<endl;
-        //                          unsigned int n;
-        //                         cin >> n;
-        //                         if (n < 0)
-        //                             throw Bitstring::Error();
-        //                         cout << "Результаты побитового сдвига:" << endl
-        //                             << "    первая строка - " << B.leftCycleShift(n) << endl
-        //                             << "    вторая строка - " << B1.leftCycleShift(n) << endl << endl;
-        //                         break;
-        //                         }
-        //              case 9 :{
-        //                          cout << "Первая строка " ;  B.Show() ; cout << endl;
-        //                          cout << "Вторая строка "  ; B1.Show() ; cout << endl <<endl;
-        //                          break;
-        //                      }
+            switch(key) {
+                case 1: {
+                    std::cout << std::endl << "Сумма равна: " << a.orBit(b) << std::endl << std::endl;
+                    a.recard_fields();
+                    break;
+                }
+                case 2: {
+                    std::cout << std::endl << "Произведение равно: " << a.andBit(b) << std::endl << std::endl;
+                    a.recard_fields();
+                    break;
+                }
+                case 3: {
+                    std::cout << std::endl << "Сумма по модулю равна: " << a.xorBit(b) << std::endl << std::endl;
+                    a.recard_fields();
+                    break;
+                }
+                case 4: {
+                    std::cout << std::endl << "Побитовое отрицание первой строки равно: " << a.notBit() << std::endl
+                                           << "Побитовое отрицание второй строки равно: " << b.notBit() << std::endl << std::endl;
+                    a.recard_fields();
+                    break;
+                }
+                case 5: {
+                    std::cout << " На сколько двигать строки?" << std::endl;
+                    unsigned int n;
+                    std::cin >> n;
 
+                    if (n < 0)
+                        throw BitString::Error("Invalid shift value");
 
-        //              case 10:  system("cls"); break;
-        //          }
-        //     }
+                    std::cout << "Результаты побитового сдвига:" << std::endl
+                         << "   первая строка - " << a.rightShift(n) << std::endl
+                         << "   вторая строка - " << b.rightShift(n) << std::endl << std::endl;
+
+                    a.recard_fields();
+                    b.recard_fields();
+                    break;
+                }
+                case 6: {
+                    std::cout << " На сколько будем двигать строки?" <<std::endl;
+                    unsigned int n;
+                    std::cin >> n;
+
+                    if (n < 0)
+                        throw BitString::Error();
+
+                    std::cout << "Результаты побитового сдвига:" << std::endl
+                        << "   первая строка - " << a.leftShift(n) << std::endl
+                        << "   вторая строка - " << b.leftShift(n) << std::endl << std::endl;
+
+                    a.recard_fields();
+                    b.recard_fields();
+                    break;
+                }
+                case 7: {
+                    std::cout << " На сколько будем двигать строки?" <<std::endl;
+                    unsigned int n;
+                    std::cin >> n;
+
+                    if (n < 0)
+                        throw BitString::Error();
+
+                    std::cout << "Результаты побитового сдвига:" << std::endl
+                              << "    первая строка - " << a.rightCycleShift(n) << std::endl
+                              << "    вторая строка - " << b.rightCycleShift(n) << std::endl << std::endl;
+
+                    a.recard_fields();
+                    b.recard_fields();
+                    break;
+                }
+                case 8: {
+                    std::cout << " На сколько будем двигать строки?" <<std::endl;
+                    unsigned int n;
+                    std::cin >> n;
+
+                    if (n < 0)
+                        throw BitString::Error();
+
+                    std::cout << "Результаты побитового сдвига:" << std::endl
+                              << "    первая строка - " << a.leftCycleShift(n) << std::endl
+                              << "    вторая строка - " << b.leftCycleShift(n) << std::endl << std::endl;
+
+                    a.recard_fields();
+                    b.recard_fields();
+                    break;
+                }
+                case 9: {
+                    std::cout << "Первая строка "; a.show(); std::cout << std::endl;
+                    std::cout << "Вторая строка "; b.show(); std::cout << std::endl <<std::endl;
+                    break;
+                }
+                case 10: {
+                    tests.test_field_length(a.bits.part_large, a.bits.part_small);
+                    tests.test_field_size(a.bits.part_large, a.bits.part_small);
+                    break;
+                }
+                case 11: system("cls"); break;
+                case 12: flag_loop = false; break;
+            }
+        }
 
     }
     catch(...){
         BitString::Error e("Cout value invalid");
     }
 
-    std::cout << a.bits.part_large << std::endl;
-    std::cout << a.bits.part_small << std::endl;
-
     return 0;
 }
-
-
-
-
-
-// using namespace std;
-
-
-// class Bitstring
-// {
-// public:
-//     string not();
-//     string and(Bitstring);
-//     string or(Bitstring);
-//     string xor(Bitstring);
-
-//     string rShift(unsigned int);
-//     string lShift(unsigned int);
-//     string rightCycleShift(unsigned int);
-//     string leftCycleShift(unsigned int);
-
-// private:
-
-//     unsigned char* unit;
-//     unsigned int count;
-// };
-
-// #include"Bitstring.h"
-
-// int main()
-// {
-//     setlocale(.1251,"");
-
-//     Bitstring B,B1;
-//     try
-//     {
-
-//         B.Enter();
-//         B1.Enter();
-//         if(B.SizeOfBitstring() !=  B1.SizeOfBitstring() )
-//             throw Bitstring::Error();
-
-//         int key = 0;
-//         while(key != 11)
-//         {
-//              cout << "Нажмите (1) если хотите сложить битовые строки" <<endl
-//                   << "Нажмите (2) если хотите перемножить битовые строки" << endl
-//                   << "Нажмите (3) если хотите сложить по модулю битовые строки " << endl
-//                   << "Нажмите (4) если хотите выполнить побитовое отрицание  строк" <<endl
-//                   << "Нажмите (5) если хотите выполнить побитовый сдвиг вправо строк" << endl
-//                   << "Нажмите (6) если хотите выполнить побитовый сдвиг влево  строк " <<endl
-//                   << "Нажмите (7) если хотите выполнить циклический сдвиг строк вправо   " <<endl
-//                   << "Нажмите (8) если хотите выполнить циклический сдвиг строк влево  " <<endl
-//                   << "Нажмите (9) если хотите узнать состояние строк" <<endl
-//                   << "Нажмите (10) если хотите очистить экран" <<endl
-//                   << "Нажмите (11) если хотите выйти"<<endl;
-//              cin >> key;
-
-//              switch(key)
-//              {
-//                  case 1 :{ cout << endl << "Сумма равна :" << B.or(B1) <<endl << endl; break;}
-//                  case 2 :{ cout << endl << "Произведение равно :" << B.and(B1) <<endl << endl; break;}
-//                  case 3 :{ cout << endl << "Сумма по модулю равна : " <<  B.xor(B1) <<endl << endl; break;}
-//                  case 4 :{ cout << endl << "Побитовое отрицание первой строки равно " << B.not() << endl
-//                                         << "Побитовое отрицание второй строки равно " << B1.not() << endl << endl; break;}
-//                  case 5  :{
-//                             cout << " На сколько будем двигать строки?" <<endl;
-//                             unsigned int n;
-//                             cin >> n;
-//                             if (n < 0)
-//                                 throw Bitstring::Error();
-//                             cout << "Результаты побитового сдвига:" << endl
-//                                  << "   первая строка - " << B.rShift(n) << endl
-//                                  << "   вторая строка - " << B1.rShift(n) << endl << endl ;
-//                             break;
-//                            }
-//                  case 6:  {
-//                             cout << " На сколько будем двигать строки?" <<endl;
-//                             unsigned int n;
-//                             cin >> n;
-//                             if (n < 0)
-//                                 throw Bitstring::Error();
-//                             cout << "Результаты побитового сдвига:" << endl
-//                                  << "   первая строка - " << B.lShift(n) << endl
-//                                  << "   вторая строка - " << B1.lShift(n) << endl << endl;
-//                             break;
-//                             }
-//                  case 7:   {
-//                             cout << " На сколько будем двигать строки?" <<endl;
-//                             unsigned int n;
-//                             cin >> n;
-//                             if (n < 0)
-//                                 throw Bitstring::Error();
-//                             cout << "Результаты побитового сдвига:" << endl
-//                                 << "    первая строка - " << B.rightCycleShift(n) << endl
-//                                 << "    вторая строка - " << B1.rightCycleShift(n) << endl << endl;
-//                             break;
-//                             }
-//                  case 8:   {
-//                             cout << " На сколько будем двигать строки?" <<endl;
-//                              unsigned int n;
-//                             cin >> n;
-//                             if (n < 0)
-//                                 throw Bitstring::Error();
-//                             cout << "Результаты побитового сдвига:" << endl
-//                                 << "    первая строка - " << B.leftCycleShift(n) << endl
-//                                 << "    вторая строка - " << B1.leftCycleShift(n) << endl << endl;
-//                             break;
-//                             }
-//                  case 9 :{
-//                              cout << "Первая строка " ;  B.Show() ; cout << endl;
-//                              cout << "Вторая строка "  ; B1.Show() ; cout << endl <<endl;
-//                              break;
-//                          }
-
-
-//                  case 10:  system("cls"); break;
-//              }
-//         }
-
-
-//     }
-//     catch(Bitstring::Error)
-//     {
-//         cout << "Ошибка! Введенное значение некорректно!"<<endl;
-//     }
-//     return 0;
-
-// }
-
-
-// string Bitstring::not()
-// {
-//     string str;
-
-//     for(unsigned int i = 0; i < count; i++)
-//     {
-//         if (unit[i] == *"0")
-//             unit[i] = *"1";
-//         else
-//             if (unit[i] == *"1")
-//                 unit[i] = *"0";
-
-//         str += unit[i];
-//     }
-
-
-//     return str;
-
-// }
-
-// string Bitstring::and(Bitstring B)
-// {
-//     string str;
-
-//     for(unsigned int i = 0; i < count; i++)
-//     {
-//         if((unit[i]== *"0")&&(B.unit[i] == *"1"))
-//             str += *"0";
-//         else
-//             if((unit[i] == *"1")&&(B.unit[i] == *"0"))
-//                 str += *"0";
-//             else
-//                 str+=unit[i];
-//     }
-
-
-//     return str;
-// }
-
-// string Bitstring::or(Bitstring B)
-// {
-//     string str;
-
-//     for(unsigned int i = 0; i < count; i++)
-//     {
-//         if((unit[i]== *"0")&&(B.unit[i] == *"1"))
-//             str += *"1";
-//         else
-//             if((unit[i] == *"1")&&(B.unit[i] == *"0"))
-//                 str += *"1";
-//             else
-//                 str+=unit[i];
-//     }
-
-
-//     return str;
-// }
-
-// string Bitstring::xor(Bitstring B)
-// {
-//     string str;
-
-//     for(unsigned int i = 0; i < count; i++)
-//     {
-//         if((unit[i]== *"0")&&(B.unit[i] == *"1"))
-//             str += *"1";
-//         else
-//             if((unit[i] == *"1")&&(B.unit[i] == *"0"))
-//                 str += *"1";
-//             else
-//                 if((unit[i] == *"0")&&(B.unit[i] == *"0"))
-//                     str += *"0";
-//                 else
-//                     if((unit[i] == *"1")&&(B.unit[i] == *"1"))
-//                         str += *"0";
-
-//     }
-
-
-//     return str;
-// }
-
-// string Bitstring::rShift (unsigned int n)
-// {
-//     string str;
-
-//     for(unsigned int i = 0; i < count; i++)
-//         str += unit[i];
-
-//     str.erase(0,n);  // удаляем n символов начитая с первого
-
-//     for(int i = 0; i < n; i++)                    // добавляем n нулей в конец
-//          str.append("0");
-
-
-//     return str;
-// }
-
-// string Bitstring::lShift (unsigned int n)
-// {
-//     string str;
-
-//     for(unsigned int i = 0; i < count; i++)
-//         str += unit[i];
-
-//     str.erase(count-n,n);  // удаляем n символов начитая с первого
-
-//     str.insert(0,n,*"0");           // добавляем n нулей в  начало
-
-//     return str;
-// }
-
-// string Bitstring::rightCycleShift(unsigned int n)
-// {
-//     string str;
-
-
-
-//     for(unsigned int i = n; i < count; i++)
-//         str += unit[i];
-
-//     for(unsigned int i = 0; i < n; i++)
-//         str+=unit[i];
-
-//     return str;
-
-// }
-
-// string Bitstring::leftCycleShift(unsigned int n)
-// {
-//     string str;
-
-//     for(unsigned int i = count-n; i < count; i++)
-//         str += unit[i];
-
-//     for(unsigned int i = 0; i < count-n; i++)
-//         str+=unit[i];
-
-//     return str;
-
-// }
