@@ -15,6 +15,7 @@ github nikit34
 #include<string>
 #include<assert.h>
 
+
 const unsigned int UNIT_N = 28;
 const unsigned int LENGTH_A = 20;
 const unsigned int LENGTH_B = 10;
@@ -44,7 +45,6 @@ class TestCase {
             std::cout << "\nResult test at size   - OK" << std::endl;
         };
 };
-
 
 class BitString {
 public:
@@ -286,6 +286,7 @@ int main() {
                 << " 10 - запустить тесты внутреннего представления" << std::endl
                 << " 11 - очистить экран" << std::endl
                 << " 12 - выйти"<<std::endl;
+
             std::cin >> key;
 
             switch(key) {
@@ -384,8 +385,8 @@ int main() {
                     tests.test_field_size(a.bits.part_large, a.bits.part_small);
                     break;
                 }
-                case 11: system("cls"); break;
-                case 12: flag_loop = false; break;
+                case 11: { system("cls"); break; }
+                case 12: { flag_loop = false; break; }
             }
         }
 
