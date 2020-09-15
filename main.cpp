@@ -25,7 +25,7 @@ const unsigned int SIZE_B = 32;
 class TestCase {
     public:
         template <typename Ta, typename Tb>
-        void test_field_length(Ta a, Tb b) {
+        void test_field_length(Ta a, Tb b) const {
             int length_a = std::to_string(a).length();
             int length_b = std::to_string(b).length();
             if (length_a < length_b)
@@ -35,7 +35,7 @@ class TestCase {
         };
 
         template <typename Ta, typename Tb>
-        void test_field_size(Ta a, Tb b) {
+        void test_field_size(Ta a, Tb b) const {
             int size_a = std::to_string(a).size();
             int size_b = std::to_string(b).size();
             if (size_a < size_b)
@@ -85,7 +85,7 @@ public:
             };
     };
 
-    int sizeBitString() {
+    const int sizeBitString() const {
         return this->count;
     };
 
@@ -181,53 +181,74 @@ public:
         return str;
     }
 
-    std::string rightShift(unsigned int n) {
+    std::string rightShift(unsigned int &n) {
         std::string str;
 
-        for(unsigned int i = 0; i < this->count; i++)
+        for (unsigned int i = 0; i < this->count; i++)
             str += this->unit[i];
 
-        str.erase(0, n);
+        str.erase(this->count - n, n);
+        str.insert(0, n, '0');
 
-        for(unsigned int i = 0; i < n; i++)
-             str.append("0");
         return str;
     }
 
     std::string leftShift(unsigned int n) {
         std::string str;
 
-        for(unsigned int i = 0; i < this->count; i++)
+        for (unsigned int i = 0; i < this->count; i++)
             str += this->unit[i];
 
-        str.erase(this->count-n, n);
-        str.insert(0, n, '0');
+        str.erase(0, n);
 
+        for (unsigned int i = 0; i < n; i++)
+            str.append("0");
         return str;
     }
 
     std::string rightCycleShift(unsigned int n) {
         std::string str;
 
-        for(unsigned int i = n; i < this->count; i++)
+        for (unsigned int i = count - n; i < this->count; i++)
             str += this->unit[i];
 
-        for(unsigned int i = 0; i < n; i++)
+        for (unsigned int i = 0; i < this->count - n; i++)
             str += this->unit[i];
 
-         return str;
+        return str;
     }
 
     std::string leftCycleShift(unsigned int n) {
         std::string str;
 
-        for(unsigned int i = count - n; i < this->count; i++)
+        for (unsigned int i = n; i < this->count; i++)
             str += this->unit[i];
 
-        for(unsigned int i = 0; i < this->count - n; i++)
+        for (unsigned int i = 0; i < n; i++)
             str += this->unit[i];
 
         return str;
+    }
+
+    std::string operator+(BitString b) {
+        return (*this).orBit(b);
+    }
+
+    std::string operator*(BitString b) {
+        return (*this).andBit(b);
+    }
+
+    std::string operator/(BitString b) {
+        return (*this).xorBit(b);
+    }
+
+    std::string operator-() {
+        return (*this).notBit();
+    }
+
+    friend std::ostream& operator<< (std::ostream& cout, BitString item) {
+        cout << item.unit;
+        return cout;
     }
 
 private:
@@ -269,23 +290,23 @@ int main() {
 
             switch(key) {
                 case 1: {
-                    std::cout << std::endl << "Сумма равна: " << a.orBit(b) << std::endl << std::endl;
+                    std::cout << std::endl << "Сумма равна: " << a + b << std::endl << std::endl;
                     a.recard_fields();
                     break;
                 }
                 case 2: {
-                    std::cout << std::endl << "Произведение равно: " << a.andBit(b) << std::endl << std::endl;
+                    std::cout << std::endl << "Произведение равно: " << a * b << std::endl << std::endl;
                     a.recard_fields();
                     break;
                 }
                 case 3: {
-                    std::cout << std::endl << "Сумма по модулю равна: " << a.xorBit(b) << std::endl << std::endl;
+                    std::cout << std::endl << "Сумма по модулю равна: " << a / b << std::endl << std::endl;
                     a.recard_fields();
                     break;
                 }
                 case 4: {
-                    std::cout << std::endl << "Побитовое отрицание первой строки равно: " << a.notBit() << std::endl
-                                           << "Побитовое отрицание второй строки равно: " << b.notBit() << std::endl << std::endl;
+                    std::cout << std::endl << "Побитовое отрицание первой строки равно: " << -a << std::endl
+                                           << "Побитовое отрицание второй строки равно: " << -b << std::endl << std::endl;
                     a.recard_fields();
                     break;
                 }
