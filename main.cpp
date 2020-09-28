@@ -14,9 +14,10 @@ github nikit34
 #include<iostream>
 #include<string>
 #include<assert.h>
+#include <cmath>
 
 
-const unsigned int UNIT_N = 28;
+const unsigned int UNIT_N = 96;
 const unsigned int LENGTH_A = 20;
 const unsigned int LENGTH_B = 10;
 const unsigned int SIZE_A = 64;
@@ -64,14 +65,21 @@ public:
         for(unsigned int i = 0; i < this->count; ++i)
             str.push_back(this->unit[i]);
 
-        if(this->count > LENGTH_B - 1) {
-            const std::string str_large = '1' + str.substr(0, this->count - LENGTH_B + 1);
-            this->bits.part_large = std::stoull(str_large, nullptr, 10);
-            const std::string str_small = '1' + str.substr(this->count - LENGTH_B + 1, LENGTH_B - 1);
-            this->bits.part_small = std::stoul(str_small, nullptr, 10);
+        if(this->count > 64) {
+            this->bits.part_large = 0;
+            for (int i = 0; i < 32; i++){
+                this->bits.part_large = this->bits.part_large + pow((int)str[i], 96 - i);
+            }
+            this->bits.part_small = 0;
+            for (int i = 0; i < 64; i++){
+                this->bits.part_large = this->bits.part_large + pow((int)str[i], 64 - i);
+            }
         }
         else {
-            this->bits.part_small = std::stoul('1' + str.substr(0, this->count), nullptr, 10);
+            this->bits.part_small = 0;
+            for (int i = 0; i < 64; i++){
+                this->bits.part_large = this->bits.part_large + pow((int)str[i], 64 - i);
+            }
         }
     };
 
@@ -263,9 +271,9 @@ int main() {
     TestCase tests;
     BitString a, b;
 
+    a.enter();
+    b.enter();
     try {
-        a.enter();
-        b.enter();
 
         if (a.sizeBitString() != b.sizeBitString())
             throw BitString::Error();
@@ -279,7 +287,7 @@ int main() {
                 << " 3  - сложить по модулю битовые строки " << std::endl
                 << " 4  - выполнить побитовое отрицание  строк" << std::endl
                 << " 5  - выполнить побитовый сдвиг вправо строк" << std::endl
-                << " 6  - выполнить побитовый сдвиг влево  строк " << std::endl
+                << " 6  - выполнить побитовый сдвиг влево строк " << std::endl
                 << " 7  - выполнить циклический сдвиг строк вправо   " << std::endl
                 << " 8  - выполнить циклический сдвиг строк влево  " << std::endl
                 << " 9  - узнать состояние строк" << std::endl
